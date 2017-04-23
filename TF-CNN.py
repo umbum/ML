@@ -25,31 +25,40 @@ class Model:
         
     def _build_net(self):
         with tf.variable_scope(self.name):
-            self.training = 
+            self.training =  tf.placeholder(tf.bool)
 
-'''mnist.train.images[0]의 형상은 (784, )이므로 밑에가 [784, None]이 되어야 할 것 같지만 
-X에 제공될 때 한 번 더 묶어서 2차원 배열(1,784)로 변경된다는 점에 주의.'''
-X = tf.placeholder(tf.float32, [None, 784])
-X_img = tf.reshape(X, [-1, 28, 28, 1]) #N, H, W, C
-Y = tf.placeholder(tf.float32, [None, 10])
+            '''mnist.train.images[0]의 형상은 (784, )이므로 밑에가 [784, None]이 되어야 할 것 같지만 
+            X에 들어갈 때 한 번 더 묶여서 2차원 배열(1,784)로 변경된다는 점에 주의.'''
+            self.X = tf.placeholder(tf.float32, [None, 784])
+            X_img = tf.reshape(X, [-1, 28, 28, 1]) #N, H, W, C
+            self.Y = tf.placeholder(tf.float32, [None, 10])
 
-#filter는 3x3x1이고.. FN은 32.
-W1 = tf.Variable(tf.random_normal([3, 3, 1, 32], stddev=0.01))
-''' padding="SAME"은 stride가 1, 1일 때 입력 형상이 그대로 출력 형상이 되는 padding을 말한다.
-conv layer에서는 stride가 1, 1이고, padding="SAME"이므로
-입력 형상이 그대로 출력 형상이 된다. (?, 28, 28, 32)
-pooling layer에서는 stride가 2, 2이고,padding="SAME"이므로
-출력 형상이 입력 형상의 반이 된다. (?, 14, 14, 32)
-(stride의 첫 번째와 마지막은 그냥 1로 고정이라고 생각하면 된다)'''
-L1 = tf.nn.conv2d(X_img, W1, strides=[1, 1, 1, 1], padding="SAME")
-L1 = tf.nn.relu(L1)
-L1 = tf.nn.max_pool(L1, ksize=[1, 2, 2, 1],
-                   strides=[1, 2, 2, 1], padding="SAME")
-
-'''L1에서는 입력이 1channel이라 filter가 1장만 있었지만
+            #filter는 3x3x1이고 FN은 32
+            #W1 정의, tf.nn.conv2d, tf.nn.relu를 한꺼번에 layers로 처리한다.
+            conv1 = tf.layers.conv2d(inputs=X_img, filters=32, kernel_size=[3, 3], padding="SAME", activation=tf.nn.relu)
+            pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], padding="SAME", strides=2)
+            dropout1 = tf.layers.dropout(inputs=pool1, rate=0.7, training=self.training)         
+            
+            '''layer1에서는 입력이 1channel이라 filter가 1장만 있었지만
 L1을 거쳐 channel이 32가 되었다.
 channel 1개 당 filter 1장이 필요하니까 32장의 filter가 필요하고
 이런 filter 박스는 몇 개 있어도 상관 없지만 여기서는 64개.'''
+            conv2 = tf.layers.conv2d(inputs=dropout1, filters=64, kernel_size=[3, 3], padding="SAME", activation=tf.nn.relu)
+            pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], padding="SAME", strides=2)
+            dropout2 = tf.layers.dropout(inputs=pool2, rate=0.7, training=self.training)
+                                     
+            conv3 = tf.layers.conv2d(inputs=dropout2, filters=128, kernel_size=[3, 3], padding = "SAME", activation=tf.nn.relu)
+            pool3 = tf.layers.max_poolin2d(inputs=conv3, pool_size=[2,2], padding="SAME", strides=2)
+            dropout3 = tf.layers.dropout(inputs=pool3, rate=0.7, training=self.training)
+            
+            flat = tf.reshape(dropout3, [-1, 128 * 4 * 4])
+            dense4 = tf.layers.dense(inputs=flast, units=625, activation=tf.nn.relu)
+            dropout4 = tf.layers.dropout(inputs=dense4, rate=0.5, raining=self.traning)
+            self.logits = tf.layers.dropout(inputs=dense4, rate=0.5, training=self.traning)
+        
+        self.cost = tf.reduce_mean(tf.nn.softmax_
+        self.optimizer = tf.train.AdamOptimizer(leanring_rate=learning_rate).minimize(self.cost)
+
 W2 = tf.Variable(tf.random_normal([3, 3, 32, 64], stddev=0.01))
 
 L2 = tf.nn.conv2d(L1, W2, strides=[1, 1, 1, 1], padding="SAME")
