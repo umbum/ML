@@ -50,7 +50,7 @@ class CNN:
             flat = tf.reshape(dropout3, [-1, 128 * 4 * 4])
             dense4 = tf.layers.dense(inputs=flat, units=625, activation=tf.nn.relu)
             dropout4 = tf.layers.dropout(inputs=dense4, rate=0.5, training=self.training)
-            self.logits = tf.layers.dropout(inputs=dense4, rate=0.5, training=self.training)
+            self.logits = tf.layers.dense(inputs=dropout4, units=10)
 
         '''원래 Softmax의 출력을 MSE 또는 CEE에 넣고 결과를 최소로 하는 방향으로 최적화 해 가는건데.
         여기서 reduce_mean으로 또 평균을 내는 이유는 배치 때문이다.
@@ -73,23 +73,24 @@ tf.nn.softmax_cross_entropy_with_logits은 입력 data를 logits으로, 정답 l
         train에서 optimizer 호출하면 한방에 처리되기 때문에 굳이 있을 필요는 없지만
         logits의 값을 알고 싶은 경우(신경망이 어떻게 추론했는지 출력 뉴런 값을 알고 싶은 경우)에는 prediction을 따로 호출.
         '''
-        return self.sess.run(self.logits, feed_dict={X: x_test, self.training:training})
+        return self.sess.run(self.logits, feed_dict={self.X: x_test, self.training:training})
     
     def get_accuracy(self, x_test, y_test, training=False):
-        return self.sess.run(self.accuracy, feed_dict = {X: x_test, Y: y_test, self.training: training})
+        return self.sess.run(self.accuracy, feed_dict = {self.X: x_test, self.Y: y_test, self.training: training})
         
     def train(self, x_data, y_data, training=True):
         return self.sess.run([self.cost, self.optimizer], feed_dict={self.X: x_data, self.Y:y_data, self.training: training})
         
 def _main():
     sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
     
     #Ensemble
     models = []
     num_models = 2
     for m in range(num_models):
         models.append(CNN(sess, "model" + str(m)))
+
+    sess.run(tf.global_variables_initializer())
     
     for epoch in range(epochs):
         avg_cost_list = np.zeros(len(models))
@@ -102,18 +103,18 @@ def _main():
                 avg_cost_list[m_idx] += c / total_batch
         print('Epoch:', '%04d' % (epoch + 1), 'cost =', avg_cost_list)
         
-    _check(models)
+    _check(sess, models)
 
-def _check(models):
+def _check(sess, models):
     test_size = len(mnist.test.labels[:1000])
     predictions = np.zeros(test_size * 10).reshape(test_size, 10)
     
     for m_idx, m in enumerate(models):
         print(m_idx, "Accuracy   :", m.get_accuracy(mnist.test.images[:1000], mnist.test.labels[:1000]))
-        p = m.predict(mnist.test.images[:1000])
+        p = m.prediction(mnist.test.images[:1000])
         predictions += p 
         
-    ensemble_correct_prediction = tf.equal(tf.argmax(predictions, axis=1), tf.argmax(mnist.test.labels, axis=1))
+    ensemble_correct_prediction = tf.equal(tf.argmax(predictions, axis=1), tf.argmax(mnist.test.labels[:1000], axis=1))
     #캐스팅 한 다음 다 더해서 개수만큼 나누기 = 평균이니까 reduce_mean.
     ensemble_accuracy = tf.reduce_mean(tf.cast(ensemble_correct_prediction, tf.float32))
     print("Ensemble accuracy : ", sess.run(ensemble_accuracy))
