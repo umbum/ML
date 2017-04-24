@@ -55,7 +55,6 @@ L2 = tf.nn.dropout(L2, keep_prob=keep_prob)
 L2_flat = tf.reshape(L2, [-1, 7 * 7 * 64])
 
 
-#get_variable은 또 뭐여???
 W3 = tf.get_variable("W3", shape=[7 * 7 * 64, 625],
 initializer = tf.contrib.layers.xavier_initializer()) 
 b3 = tf.Variable(tf.random_normal([625]))
