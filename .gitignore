@@ -3,3 +3,4 @@ MNIST_data
 activate
 DLfromScratch/dataset/*.gz
 DLfromScratch/dataset/mnist.pkl
+__pycache__
