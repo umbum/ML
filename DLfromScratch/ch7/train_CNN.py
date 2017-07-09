@@ -17,6 +17,7 @@ def _main():
     x_test, t_test = x_test[:1000], t_test[:1000]
 
     net = SimpleConvNet()
+    net.load_params("D:/Github/ml/DLfromScratch/ch7/params.pkl")
 
     epochs = 10
     batch_size = 100
@@ -55,6 +56,7 @@ def _main():
             print("train_acc : ", train_acc)
             print("test_acc : ", test_acc)
     
+    #net.save_params("D:/Github/ml/DLfromScratch/ch7/params.pkl")
     return train_loss_list, train_acc_list, test_acc_list
 
 if __name__ == "__main__":

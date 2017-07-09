@@ -105,8 +105,8 @@ class SimpleConvNet:
             self.params = pickle.load(f)
         
         for i, key in enumerate(['Conv1', 'Affine2', 'Affine3']):
-            self.layers[key].dW = self.params['W'+str(i+1)]
-            self.layers[key].db = self.params['b'+str(i+1)]
+            self.layers[key].W = self.params['W'+str(i+1)]
+            self.layers[key].b = self.params['b'+str(i+1)]
 
 
 if __name__ == "__main__":
