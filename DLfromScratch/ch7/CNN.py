@@ -3,8 +3,7 @@ import sys, os
 import numpy as np
 from collections import OrderedDict
 import pickle
-
-sys.path.append(os.getcwd()+"\DLfromScratch")
+sys.path.append("..")
 from common.layers import *
 
 

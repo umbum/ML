@@ -3,7 +3,7 @@ import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 
-sys.path.append(os.getcwd()+"\DLfromScratch")
+sys.path.append("..")
 from dataset.mnist import load_mnist
 from CNN import SimpleConvNet
 #from simple_convnet import SimpleConvNet
@@ -17,7 +17,7 @@ def _main():
     x_test, t_test = x_test[:1000], t_test[:1000]
 
     net = SimpleConvNet()
-    net.load_params("D:/Github/ml/DLfromScratch/ch7/params.pkl")
+    net.load_params("../params.pkl")
 
     epochs = 10
     batch_size = 100
