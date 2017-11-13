@@ -5,3 +5,4 @@ DLfromScratch/dataset/*.gz
 DLfromScratch/dataset/mnist.pkl
 __pycache__
 .vscode
+TF/Variables/*
