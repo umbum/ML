@@ -34,8 +34,9 @@ def tf_train_wrap(restore_step=0, ensemble=2, tflogs=True):
     else:
         sess.run(tf.global_variables_initializer())
     
-    writer = tf.summary.FileWriter('./tflogs/log-'+today, graph=sess.graph)
+    writer = tf.summary.FileWriter('./tflogs/log{}-{}'.format(today, restore_step), graph=sess.graph)
     #writer.add_graph(sess.graph)
+    
     step = 0
     for epoch in range(epochs):
         avg_cost_list = np.zeros(len(models))

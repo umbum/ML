@@ -27,7 +27,7 @@ class CNN:
             with tf.name_scope('L1'):
                 conv1 = tf.layers.conv2d(inputs=X_img, filters=32, kernel_size=[3, 3], padding="SAME", activation=tf.nn.relu)
                 pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], padding="SAME", strides=2)
-                dropout1 = tf.layers.dropout(inputs=pool1, rate=0.7, training=self.training)         
+                dropout1 = tf.layers.dropout(inputs=pool1, rate=0.7, training=self.training)
                 
             with tf.name_scope('L2'):
                 conv2 = tf.layers.conv2d(inputs=dropout1, filters=64, kernel_size=[3, 3], padding="SAME", activation=tf.nn.relu)
@@ -46,9 +46,9 @@ class CNN:
             
             with tf.name_scope('L5_dense'):
                 self.logits = tf.layers.dense(inputs=dropout4, units=10)
-                
             summary_logits = tf.summary.histogram('output value', self.logits)
             #summary.append(tf.summary.histogram('output value', logits))
+            
             ''' 원래 Softmax의 출력을 MSE 또는 CEE에 넣고 결과를 최소로 하는 방향으로 최적화 해 가는건데.
             여기서 reduce_mean으로 또 평균을 내는 이유는 배치 때문이다.
             tf.nn.softmax_cross_entropy_with_logits는 A 1-D Tensor of length batch_size를 리턴하기 때문.
@@ -57,9 +57,10 @@ class CNN:
             self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.Y))
             self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(self.cost)
         
-            ''' logit과 Y는 반복할 때 마다 변경되는 값이지만 여기서 테스트하기 위해 한 번 수행.
-            correct_prediction은 True/False 1-D Tensor
-            캐스팅 한 다음 다 더해서 개수만큼 나누기 = 평균이니까 reduce_mean.'''
+            ''' epoch 마다 feed_dict = {test}를 넘겨서 정확한 accuracy를 계산하도록 한다.
+            tensorboard에 찍히는 accuracy는 train data를 대상으로 계산한 accuracy임에 주의.
+            correct_prediction은 True/False 1-D Tensor.
+            캐스팅 한 다음 다 더해서 개수만큼 나누면 되는데 이게 곧 평균이니까 reduce_mean.'''
             correct_prediction = tf.equal(tf.argmax(self.logits, axis=1), tf.argmax(self.Y, axis=1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             summary_accuracy = tf.summary.scalar('accuracy', self.accuracy)
@@ -79,6 +80,6 @@ class CNN:
         return self.sess.run(fetches, feed_dict={self.X: x_data, self.Y:y_data, self.training: training})
     
     def prediction(self, x_test, training=False):
-        ''' train에서 optimizer 호출하면 한방에 처리되기 때문에 굳이 있을 필요는 없지만
-        logits의 값을 알고 싶은 경우(신경망이 어떻게 추론했는지 출력 뉴런 값을 알고 싶은 경우)에는 prediction을 따로 호출. '''
+        ''' logits의 값을 알고 싶은 경우(신경망이 어떻게 추론했는지 출력 뉴런 값을 알고 싶은 경우)에는 prediction을 따로 호출. '''
         return self.sess.run(self.logits, feed_dict={self.X: x_test, self.training:training})
+        
