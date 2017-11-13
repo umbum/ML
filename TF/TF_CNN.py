@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 ### tensorboard 사용 가능.
+## input은 28*28이어야 한다.
 
 class CNN:
     __slots__ = ('sess', 'name', 'lr', 'training', 'X', 'Y', 'logits', 'cost', 'optimizer', 'accuracy', 'merged_summary')
