@@ -17,43 +17,45 @@ mnist = input_data.read_data_sets("../MNIST_data/", one_hot=True)
 learning_rate = 0.001
 batch_size = 100  
 # mnist.train.num_examples는 55000이므로 55000/100 => 1 epoch 당 550번 반복
-epochs = 1
-# 원래 epochs = 15라 15 * 550이지만 속도 때문에 2 * 550으로 변경.
+epochs = 5 
+# 원래 15 정도 줘야.
 
 sess = tf.Session()
 models = []
 
-def tf_train_wrap(restore_step=0, ensemble=1, tflogs=True):
+def tf_train_wrap(restore_step=0, ensemble=2, tflogs=True):
     ### Ensemble ###
     for m in range(ensemble):
         models.append(CNN(sess, "model" + str(m), learning_rate))
     
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=15)
     if restore_step:
-        saver.restore(sess, "./Variables/mnist-en{}.ckpt-{}".format(ensemble, restore_step))
+        saver.restore(sess, "./Variables/mnist-en{}-{}".format(ensemble, restore_step))
     else:
         sess.run(tf.global_variables_initializer())
     
+    writer = tf.summary.FileWriter('./tflogs/log-'+today, graph=sess.graph)
+    #writer.add_graph(sess.graph)
     step = 0
     for epoch in range(epochs):
         avg_cost_list = np.zeros(len(models))
         total_batch = int(mnist.train.num_examples / batch_size)
-        total_batch = int(total_batch/10) #속도 때문에 추가. total_batch = 55
+        #total_batch = int(total_batch/10)
         for i in range(total_batch):
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)    
+            step += 1
             for m_idx, m in enumerate(models):
                 ### run Neural Net
                 if tflogs:
-                    writer = tf.summary.FileWriter('./tflogs/log-'+today, graph=sess.graph)
-                    #writer.add_graph(sess.graph)
                     c, _, s = m.train(batch_xs, batch_ys)
                     writer.add_summary(s, global_step=step)
                 else:
                     c, _ = m.train(batch_xs, batch_ys, summary=False)
-                step += 1
                 avg_cost_list[m_idx] += c / total_batch
-        print('Epoch:', '%04d' % (epoch + 1), 'cost =', avg_cost_list)
-        save_path = saver.save(sess, "./Variables/mnist-en{}.ckpt-{}".format(ensemble, step+restore_step))
+            if (step % 100) == 0:
+           	    print('step:', '%04d' % step, 'cost =', c)
+        print('Epoch:', '%04d' % (epoch + 1), 'avg_cost =', avg_cost_list)
+        save_path = saver.save(sess, "./Variables/mnist-en{}-{}".format(ensemble, step+restore_step))
         
 
 def tf_prediction_wrap():
@@ -74,4 +76,4 @@ def _check(sess, models):
     print("Ensemble accuracy : ", sess.run(ensemble_accuracy))
 
 if __name__ == '__main__':
-    tf_train_wrap(restore_step=55)
+    tf_train_wrap(restore_step=8250)
