@@ -9,7 +9,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 from TF_CNN import CNN
 
 
-today = date.today().strftime('%y%m%d')
+today = date.today().strftime('%y%m%d-%H%M')
 tf.set_random_seed(777)
 
 mnist = input_data.read_data_sets("../MNIST_data/", one_hot=True)
@@ -51,7 +51,7 @@ def _main():
                 step += 1
                 avg_cost_list[m_idx] += c / total_batch
         print('Epoch:', '%04d' % (epoch + 1), 'cost =', avg_cost_list)
-        saver.save(sess, "./Variables/mnist.ckpt", global_step=(epoch+1)*total_batch)
+        saver.save(sess, "./Variables/mnist.ckpt", global_step=(epoch+1)*total_batch, max_to_keep=3)
         
     #_check(sess, models)
 
