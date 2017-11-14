@@ -5,14 +5,14 @@ import tensorflow as tf
 
 class CNN:
     __slots__ = ('sess', 'name', 'lr', 'training', 'X', 'Y', 'logits', 'cost', 'optimizer', 'accuracy', 'merged_summary')
-    def __init__(self, sess, name, learning_rate):
+    def __init__(self, sess, name):
         self.sess = sess
         self.name = name
-        self.lr = learning_rate
         self._build_net()
         
     def _build_net(self):
         with tf.variable_scope(self.name):
+            self.lr = tf.placeholder(tf.float32)    # train에서만 사용한다.
             self.training =  tf.placeholder(tf.bool)
             summarys = []
             
@@ -72,12 +72,12 @@ class CNN:
     def get_accuracy(self, x_test, y_test, training=False):
         return self.sess.run(self.accuracy, feed_dict = {self.X: x_test, self.Y: y_test, self.training: training})
         
-    def train(self, x_data, y_data, training=True, summary=True):
+    def train(self, x_data, y_data, learning_rate, training=True, summary=True):
         fetches = [self.cost, self.optimizer]
         if summary:
             fetches.append(self.merged_summary)
         
-        return self.sess.run(fetches, feed_dict={self.X: x_data, self.Y:y_data, self.training: training})
+        return self.sess.run(fetches, feed_dict={self.X: x_data, self.Y:y_data, self.training:training, self.lr:learning_rate})
     
     def prediction(self, x_test, training=False):
         ''' logits의 값을 알고 싶은 경우(신경망이 어떻게 추론했는지 출력 뉴런 값을 알고 싶은 경우)에는 prediction을 따로 호출. '''
