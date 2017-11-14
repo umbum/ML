@@ -1,4 +1,3 @@
-import os
 import random
 from datetime import datetime
 
@@ -16,11 +15,14 @@ mnist = input_data.read_data_sets("../MNIST_data/", one_hot=True)
 class TFCNN_handy:
     def __init__(self, ensemble=2, restore_step=0):
         self.sess = tf.Session()
+
+        ### Build Ensemble Graph ###
         self.ensemble = ensemble
-        ### Ensemble ###
         self.models = []
         for m in range(self.ensemble):
             self.models.append(CNN(self.sess, "model" + str(m)))
+
+        ### restore variables ###
         self.saver = tf.train.Saver(max_to_keep=15)
         self.restore_step = restore_step
         self.restore_variables()
@@ -28,10 +30,12 @@ class TFCNN_handy:
         
     def restore_variables(self):
         if self.restore_step:
-            self.saver.restore(self.sess, "./Variables/mnist-en{}-{}".format(ensemble, self.restore_step))
+            restore_path = "./Variables/mnist-en{}-{}".format(self.ensemble, self.restore_step)
+            self.saver.restore(self.sess, restore_path)
+            print("[*] Variables are restored ", restore_path)
         else:
             self.sess.run(tf.global_variables_initializer())
-        
+            print("[*] Variables are initialized")
         
     def train_wrap(self, lr, epochs, batch_size, tflogs=True, save=True):
         if tflogs:
@@ -43,7 +47,7 @@ class TFCNN_handy:
         for epoch in range(epochs):
             avg_cost_list = np.zeros(len(self.models))
             total_batch = int(mnist.train.num_examples / batch_size)
-            total_batch = int(total_batch/100)
+            #total_batch = int(total_batch/100)
             for i in range(total_batch):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)    
                 step += 1
@@ -55,8 +59,8 @@ class TFCNN_handy:
                     else:
                         c, _ = m.train(batch_xs, batch_ys, lr, summary=False)
                     avg_cost_list[m_idx] += c / total_batch
-                if (step % 20) == 0:
-               	    print('step:', '%04d' % step, 'cost =', c)
+                if (step % 100) == 0:
+               	    print('step:', '%04d' % (step+self.restore_step), 'cost =', c)
             print('Epoch:', '%04d' % (epoch + 1), 'avg_cost =', avg_cost_list)
             self.test_accuracy(mnist.test.labels[:1000], mnist.test.images[:1000])
             if save:
@@ -85,9 +89,9 @@ class TFCNN_handy:
 
 
 if __name__ == '__main__':
-    cnn = TFCNN_handy(ensemble=2, restore_step=0)
+    cnn = TFCNN_handy(ensemble=2, restore_step=5500)
     # mnist.train.num_examples는 55000이므로 55000/100 => 1 epoch 당 550번 반복
     # 원래 epochs=15정도 줘야.
-    cnn.train_wrap(lr=0.001, epochs=2, batch_size=100, tflogs=False, save=False)
+    cnn.train_wrap(lr=0.001, epochs=5, batch_size=100, tflogs=True, save=True)
     # print("idx : ", cnn.prediction_wrap(mnist.test.labels[:10], mnist.test.images[:10]))
     
