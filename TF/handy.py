@@ -67,18 +67,18 @@ class TFCNN_handy:
                 self.saver.save(self.sess, "./Variables/mnist-en{}-{}".format(self.ensemble, step+self.restore_step))
         
     
-    def test_accuracy(self, test_label, test_images):
+    def test_accuracy(self, test_labels, test_images):
         # for m_idx, m in enumerate(self.models):
-            # print("model", m_idx, " Test Dataset Accuracy   :", m.get_accuracy(test_images, test_label))
+            # print("model", m_idx, " Test Dataset Accuracy   :", m.get_accuracy(test_images, test_labels))
         
-        ensemble_correct_prediction = tf.equal(self.prediction_wrap(test_label, test_images), tf.argmax(test_label, axis=1))
+        ensemble_correct_prediction = tf.equal(self.prediction_wrap(test_labels, test_images), tf.argmax(test_labels, axis=1))
         # 캐스팅 한 다음 다 더해서 개수만큼 나누면 되는데 이게 곧 평균이니까 reduce_mean
         ensemble_accuracy = tf.reduce_mean(tf.cast(ensemble_correct_prediction, tf.float32))
         print("Ensemble accuracy : ", self.sess.run(ensemble_accuracy))
 
 
-    def prediction_wrap(self, label, images):
-        predictions = np.zeros(len(label) * 10).reshape(len(label), 10)
+    def prediction_wrap(self, labels, images):
+        predictions = np.zeros(len(labels) * 10).reshape(len(labels), 10)
         
         for m_idx, m in enumerate(self.models):
             # ensemble이니까, prediction에서 두 결과를 더했을 때 가장 높은 결과를 갖는 라벨을 반환해야 의미가 있다.
