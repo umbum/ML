@@ -7,3 +7,4 @@ __pycache__
 .vscode
 TF/Variables/*
 TF/tflogs/*
+TF/ckpt*
