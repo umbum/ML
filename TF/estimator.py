@@ -58,15 +58,18 @@ class Estimator:
     
     def train(self, steps=100, epochs=1):
         fnames_ext = [os.path.split(f)[1] for f in self.fpaths]
-        fnames = [int(os.path.splitext(f)[0]) for f in fnames_ext]
-        self.train_labels = fnames    # 파일 이름이 곧 label인 경우.
+        fnames = [os.path.splitext(f)[0] for f in fnames_ext]
+        labels = [int(f[f.find('_')+1:]) for f in fnames]
+        self.train_labels = labels
         self.train_epochs = epochs
         self.classifier.train(input_fn=self.dataset_input_fn, steps=steps)
     
     def accuracy(self):
         fnames_ext = [os.path.split(f)[1] for f in self.fpaths]
-        fnames = [int(os.path.splitext(f)[0]) for f in fnames_ext]
-        self.train_labels = fnames
+        fnames = [os.path.splitext(f)[0] for f in fnames_ext]
+        labels = [int(f[f.find('_')+1:]) for f in fnames]
+        print("input labels : ", labels)
+        self.train_labels = labels
         return self.classifier.evaluate(input_fn=self.dataset_input_fn)["accuracy"]
     
     
@@ -106,7 +109,7 @@ class Estimator:
 
 if __name__ == "__main__":
     e = Estimator(
-        fpaths = glob.glob("./imgs/*"), 
+        fpaths = glob.glob("../sctf_asm/samples/*"), 
         shape = (28,28), 
         n_output = 13, 
         model_dir="./ckpt_estimator")
@@ -115,5 +118,6 @@ if __name__ == "__main__":
     # print("\nMNIST Test Accuracy: {0:f}\n".format(e.mnist_accuracy()))
     
     e.train(steps=100, epochs=10)
+    print("Accuracy : ", e.accuracy())
     print("Prediction : ", e.predict())
     
